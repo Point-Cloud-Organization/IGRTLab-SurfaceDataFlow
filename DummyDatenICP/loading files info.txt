@@ -1,0 +1,37 @@
+# Load thermal image with any image library, e.g. opencv, images are in 16 bit images (unsigned short) and the data is in centikelvin
+import numpy as np
+import open3d as o3d
+import cv2
+file = R"path\to\thermal.png"
+img = cv2.imread(str(file), cv2.IMREAD_ANYDEPTH)
+
+# Load pointcloud with any ply loader, e.g. open3d. Pointclouds are stored in the open source format ply and can be read with any library which support it.
+file = R"path\to\pointcloud.ply"
+depth = o3d.io.read_point_cloud(str(file))
+
+# fuse images, load the extrinsic and intrinsic matrix and use it to project the points to the thermal image plane
+file = R"path\to\intrinsics.txt"
+intrinsic = np.array([])
+with open(file, "r") as f:
+  for line in f.readlines():
+    prefix = "Matrix: "
+    if line.startswith(prefix):
+      intrinsic = np.matrix(line[len(prefix):]).reshape(3, 3)
+
+file = R"path\to\extrinsic.txt"
+extrinsic = np.array([])
+with open(file, "r") as f:
+  extrinsic = np.matrix(f.readline()).reshape(4, 4)
+
+# projection using the pin hole camera model (more on https://docs.opencv.org/4.x/d9/d0c/group__calib3d.html) also it is possible to use a library to project
+# the points, e.g. https://docs.opencv.org/4.x/d9/d0c/group__calib3d.html#ga1019495a2c8d1743ed5cc23fa0daff8c
+numDepthPixels = depth.shape[0]
+depthHomogeneous = np.concatenate((depth.transpose(), np.ones((1, numDepthPixels))), axis=0)
+projectionMatrix = np.concatenate((intrinsic, np.zeros((3, 1))), axis=1) @ extrinsic
+depthProjectedHomogenous = projectionMatrix @ depthHomogeneous
+depthProjected = depthProjectedHomogenous[:2, :] / depthProjectedHomogenous[2, :]
+projectedPoints = depthProjected.astype(np.int32)
+
+# once projected, the index (x,y) is the pixel index in the thermal image
+thermalMappedToDepth = img.reshape(img.shape[0] * img.shape[1], 3)[np.ravel_multi_index(
+    [projectedPoints[1, :], projectedPoints[0, :]], img.shape, mode="clip")].squeeze()

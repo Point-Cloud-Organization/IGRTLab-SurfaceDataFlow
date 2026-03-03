@@ -1,0 +1,9 @@
+In the folder ET_SurfaceTrackingRecorder create a shortcut of ET_SurfaceTrackingRecorder.exe
+Open the properties of such shortcut and in the field "Target" at the end of what is written add the following
+" -o record --recordingDir path\To\Recordings --usePlyAndPng"
+The quotes ("") do not have to be copied and path\to\Recordings is a valid folder in the computer where the recordings will be stored, if it has spaces in the path, surround it with quotes. e.g. "Path with\spaces\to\recordings"
+Close the properties and run the shortcut.
+
+To visualize them one can use the python script (remember to install the dependencies first):
+"python loadPLYAndPNGData.py -f folder"
+Replace folder with the stream you want to visualize.
