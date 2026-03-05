@@ -1,9 +1,17 @@
+import os
+import hdf5plugin
 import h5py
 import numpy as np
 import open3d as o3d
 from pathlib import Path
 from typing import Optional, Tuple
 
+# hdf5plugin.plugin_path ist ein String, kein Funktionsaufruf!
+try:
+    os.environ["HDF5_PLUGIN_PATH"] = hdf5plugin.plugin_path
+except AttributeError:
+    # Falls das Attribut bei dir anders heißt, nutzen wir den Ordnerpfad direkt
+    os.environ["HDF5_PLUGIN_PATH"] = os.path.join(os.path.dirname(hdf5plugin.__file__), 'plugins')
 
 class H5PointCloudStream:
     def __init__(self, h5_path: Path):
