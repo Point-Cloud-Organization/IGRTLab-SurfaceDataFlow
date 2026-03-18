@@ -7,8 +7,9 @@ from scipy.spatial.transform import Rotation as R
 from extractH5.h5_loader import H5PointCloudStream
 
 # --- SETUP ---
-h5_path = Path("/Users/timjb/PycharmProjects/Point_Cloud/DemoData/record.h5")
-roi_path = Path("Calibration/roi_config.json")
+#h5_path = Path("/Users/timjb/PycharmProjects/Point_Cloud/DemoData/record.h5")
+h5_path = '/Volumes/INTENSO/01_Data/01_ETD/hd5/patients/1768810376373/TrackingLog.h5'
+roi_path = Path("Calibration/roi_config_1768810376373.json")
 output_dir = Path("output")
 output_dir.mkdir(exist_ok=True)
 

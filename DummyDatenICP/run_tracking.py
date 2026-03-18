@@ -9,8 +9,8 @@ from extractH5.h5_loader import H5PointCloudStream
 
 # --- SETUP ---
 # Pfade anpassen (Nutze den Pfad, der in find_roi.py geklappt hat)
-h5_path = Path("/Users/timjb/PycharmProjects/Point_Cloud/DemoData/record.h5")
-roi_path = Path("Calibration/roi_config.json")
+h5_path = Path("/Volumes/INTENSO/01_Data/01_ETD/hd5/patients/1768817211649/TrackingLog.h5")
+roi_path = Path("Calibration/roi_config_1768817211649.json")
 output_dir = Path("output")
 output_dir.mkdir(exist_ok=True)
 
@@ -75,8 +75,6 @@ def main():
                 "Timestamp (steady)": ts_steady,
                 "Current Tx": tx, "Ty": ty, "Tz": tz,
                 "Rx": rx, "Ry": ry, "Rz": rz,
-                "Expected Tx": 0, "Ty.1": 10 if i > 100 else 0, "Tz.1": 0,  # Beispiel-Erwartung
-                "Rx.1": 0, "Ry.1": 0, "Rz.1": 0,
                 "Score": reg_p2p.fitness * 100,
                 "RMSE3D": reg_p2p.inlier_rmse
             })
@@ -86,7 +84,7 @@ def main():
 
     # 3. Speichern
     df = pd.DataFrame(results)
-    csv_filename = output_dir / "failedFirstTry.csv"
+    csv_filename = output_dir / "failedFirstTry2.csv"
     df.to_csv(csv_filename, index=False)
 
     print("-" * 30)

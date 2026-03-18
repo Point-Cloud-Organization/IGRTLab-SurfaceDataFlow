@@ -22,14 +22,12 @@ class H5PointCloudStream:
         # 1. Kalibrierung laden
         self.isocenter_matrix = self._file['AdditionalInformation/Calibration/IsocenterCalibration'][()]
 
-        # 2. Referenzen auf die fetten Datasets (werden hier NICHT in den RAM geladen)
-        self.depth_ds = self._file['ImageStreams/DepthCamera/DepthData']
-        self.thermal_ds = self._file['ImageStreams/ThermalCamera/ThermalData']
+        # NEW
+        self.depth_ds = self._file['ImageStreams/ThermalDepthCamera/DepthData']
+        self.thermal_ds = self._file['ImageStreams/ThermalDepthCamera/ThermalData']
 
-        # 3. PERFORMANCE-BOOST: Kleine, gzip-komprimierte Daten sofort komplett in den RAM laden
-        # Das [:] Slicing zieht das gesamte Dataset sofort als schnelles NumPy-Array in den Speicher
-        self.depth_timestamps = self._file['ImageStreams/DepthCamera/Timestamps'][:]
-        self.thermal_timestamps = self._file['ImageStreams/ThermalCamera/Timestamps'][:]
+        self.depth_timestamps = self._file['ImageStreams/ThermalDepthCamera/Timestamps'][:]
+        self.thermal_timestamps = self._file['ImageStreams/ThermalDepthCamera/Timestamps'][:]
 
         self.num_frames = self.depth_ds.shape[0]
 
