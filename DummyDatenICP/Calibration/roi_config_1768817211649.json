@@ -1,0 +1,13 @@
+{
+    "min_bound": [
+        -150,
+        -250,
+        -50
+    ],
+    "max_bound": [
+        150,
+        50,
+        300
+    ],
+    "description": "ROI f\u00fcr Phantom-Tracking"
+}
