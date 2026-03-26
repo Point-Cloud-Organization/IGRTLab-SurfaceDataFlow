@@ -1,0 +1,67 @@
+=====================================================
+INSTALLATIONS-ANLEITUNG (Windows & Mac)
+Projekt: Point Cloud Tracking
+=====================================================
+
+Dieses Projekt erfordert Python 3.10 oder 3.11, da neuere
+Versionen (3.12+) aktuell Probleme mit der Open3D-Library
+unter Windows verursachen.
+
+-----------------------------------------------------
+1. VORBEREITUNG (ALTE VENV LÖSCHEN)
+-----------------------------------------------------
+Falls bereits ein .venv Ordner existiert, lösche diesen zuerst:
+- Schließe PyCharm / dein Terminal.
+- Lösche den Ordner ".venv" manuell im Dateimanager.
+
+-----------------------------------------------------
+2. VIRTUELLE UMGEBUNG ERSTELLEN
+-----------------------------------------------------
+Öffne ein Terminal im Projektordner und erstelle eine neue
+Umgebung mit der passenden Python-Version:
+
+WINDOWS:
+   py -3.11 -m venv .venv
+
+MAC:
+   python3.11 -m venv .venv
+
+-----------------------------------------------------
+3. VIRTUELLE UMGEBUNG AKTIVIEREN
+-----------------------------------------------------
+WINDOWS (PowerShell):
+   .\.venv\Scripts\Activate.ps1
+   (Falls Fehlermeldung: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process)
+
+MAC:
+   source .venv/bin/activate
+
+-----------------------------------------------------
+4. ABHÄNGIGKEITEN INSTALLIEREN
+-----------------------------------------------------
+Nutze das mitgelieferte Sicherheits-Skript. Es prüft automatisch,
+ob deine Python-Version korrekt ist und installiert alle
+nötigen Pakete (NumPy, Open3D, Pandas etc.):
+
+   python install_deps.py
+
+-----------------------------------------------------
+5. PYCHARM KONFIGURIEREN (WICHTIG!)
+-----------------------------------------------------
+Damit PyCharm die neue Umgebung erkennt:
+1. Öffne "Settings" (Strg+Alt+S).
+2. Gehe zu "Project: Point_Cloud" -> "Python Interpreter".
+3. Klicke auf "Add Interpreter" -> "Add Local Interpreter".
+4. Wähle "Existing" und navigiere zu:
+   WINDOWS: .venv\Scripts\python.exe
+   MAC:     .venv/bin/python
+5. Bestätige mit OK.
+
+-----------------------------------------------------
+PROBLEMBEHANDLUNG:
+-----------------------------------------------------
+- "Zugriff verweigert" beim Löschen: Schließe PyCharm und
+  stoppe alle laufenden Python-Prozesse im Task-Manager.
+- "Command not found": Stelle sicher, dass Python 3.11
+  installiert ist (Download auf python.org).
+=====================================================
