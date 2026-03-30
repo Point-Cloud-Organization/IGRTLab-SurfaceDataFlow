@@ -6,8 +6,8 @@ from pathlib import Path
 from extractH5.h5_loader import H5PointCloudStream
 
 # --- SETUP ---
-h5_path = Path(r"C:\Users\timjb\iCloudDrive\Documents\MUI\Radioonko\Daten\DemoData\record.h5")
-roi_path = Path("Calibration/roi_record.json")  # Dein ROI Name
+h5_path = Path("/Users/timjb/Documents/MUI/Radioonko/Daten/DemoData/record.h5")
+roi_path = Path("Calibration/roi_record_3003.json")  # Dein ROI Name
 output_gif = "phantom_tracking.gif"
 
 # Wie viele Frames überspringen? (z.B. step=5 macht das GIF schneller und kleiner)
@@ -28,15 +28,23 @@ def extract_main_cluster(pcd, eps=15.0, min_points=50):
 
 
 def main():
-    with open(roi_path) as f:
-        roi_bbox = o3d.geometry.AxisAlignedBoundingBox(**{k: json.load(f)[k] for k in ["min_bound", "max_bound"]})
+    # ROI-Datei einmalig laden
+    with open(roi_path, "r") as f:
+        roi_data = json.load(f)
+
+    # Bounding Box mit den geladenen Daten erstellen
+    roi_bbox = o3d.geometry.AxisAlignedBoundingBox(
+        min_bound=roi_data["min_bound"],
+        max_bound=roi_data["max_bound"]
+    )
 
     print("🎥 Bereite Video-Rendering vor...")
+
     frames_images = []
 
     # 1. Unsichtbares/Automatisiertes Fenster erstellen
     vis = o3d.visualization.Visualizer()
-    vis.create_window(width=800, height=600, visible=True)
+    vis.create_window(width=800, height=600, visible=False)
 
     # Render-Optionen (Weißer Hintergrund für Poster-Style)
     opt = vis.get_render_option()
@@ -76,6 +84,13 @@ def main():
             # Screenshot in den RAM speichern
             img = vis.capture_screen_float_buffer(do_render=True)
             img_array = (np.asarray(img) * 255).astype(np.uint8)
+
+            # --- FIX: Sicherstellen, dass die Form exakt 600x800 ist ---
+            # Open3D gibt oft (H, W, C) zurück. Wir erzwingen die Zielgröße:
+            if img_array.shape[0] != 600 or img_array.shape[1] != 800:
+                import cv2  # Falls installiert, ansonsten überspringen oder Fehlermeldung
+                img_array = cv2.resize(img_array, (800, 600))
+
             frames_images.append(img_array)
 
             print(f"Frame {i}/{limit} gerendert...", end="\r")

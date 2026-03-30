@@ -5,9 +5,9 @@ from pathlib import Path
 from extractH5.h5_loader import H5PointCloudStream
 
 # --- SETUP ---
-h5_path = Path(r"C:\Users\timjb\iCloudDrive\Documents\MUI\Radioonko\Daten\DemoData\record.h5")
+h5_path = Path("/Users/timjb/Documents/MUI/Radioonko/Daten/DemoData/record.h5")
 # WICHTIG: Trag hier den exakten Namen deiner erstellten ROI-JSON ein!
-roi_path = Path("Calibration/roi_record_test.json")
+roi_path = Path("Calibration/roi_record_3003.json")
 
 # Welcher Frame soll mit Frame 0 (Referenz) verglichen werden?
 # (Such dir den Frame aus, wo die 10mm Verschiebung am deutlichsten ist, z.B. 150)
@@ -84,7 +84,7 @@ def main():
     pcd_combined += pcd_shift
 
     # Als PLY für Sketchfab exportieren
-    export_path = "poster_3d_modell.ply"
+    export_path = "output/poster_3d_modell.ply"
     o3d.io.write_point_cloud(export_path, pcd_combined)
     print(f"✅ 3D-Modell für Sketchfab exportiert: {export_path}")
 
