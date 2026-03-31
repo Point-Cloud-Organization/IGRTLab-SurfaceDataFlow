@@ -1,0 +1,13 @@
+{
+    "min_bound": [
+        -120.0,
+        -370.0,
+        -30.0
+    ],
+    "max_bound": [
+        120.0,
+        50.0,
+        300.0
+    ],
+    "description": "ROI f\u00fcr record.h5 | Notiz: 3003"
+}
