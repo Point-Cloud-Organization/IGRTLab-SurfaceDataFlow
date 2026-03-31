@@ -5,9 +5,9 @@ from pathlib import Path
 from extractH5.h5_loader import H5PointCloudStream
 
 # --- SETUP ---
-h5_path = Path("/Users/timjb/Documents/MUI/Radioonko/Daten/DemoData/record.h5")
+h5_path = Path("/Users/timjb/Documents/MUI/Radioonko/Daten/TrackingLog_Iceberg.h5")
 # WICHTIG: Trag hier den exakten Namen deiner erstellten ROI-JSON ein!
-roi_path = Path("Calibration/roi_record_3003.json")
+roi_path = Path("Calibration/roi_record_iceberg.json")
 
 # Welcher Frame soll mit Frame 0 (Referenz) verglichen werden?
 # (Such dir den Frame aus, wo die 10mm Verschiebung am deutlichsten ist, z.B. 150)

@@ -44,7 +44,7 @@ def inspect_h5_structure(file_path: pathlib.Path):
 # 1. Pfad zur externen Festplatte anpassen
 # Windows: "D:/Ordner/datei.h5"
 # macOS: "/Volumes/NameDerFestplatte/Ordner/datei.h5"
-pfad_zur_h5 = pathlib.Path("/Users/timjb/Documents/MUI/Radioonko/Daten/DemoData/record.h5")
+pfad_zur_h5 = pathlib.Path("/Users/timjb/Documents/MUI/Radioonko/Daten/TrackingLog_Iceberg.h5")
 
 if __name__ == "__main__":
     inspect_h5_structure(pfad_zur_h5)
