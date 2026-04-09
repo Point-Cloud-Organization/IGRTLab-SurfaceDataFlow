@@ -1,0 +1,13 @@
+{
+    "min_bound": [
+        -100.0,
+        -150.0,
+        -50.0
+    ],
+    "max_bound": [
+        100.0,
+        150.0,
+        300.0
+    ],
+    "description": "ROI f\u00fcr TrackingLog.h5 | Notiz: fuckyeah"
+}

@@ -11,7 +11,7 @@ from datetime import datetime
 from find_roi import run_interactive_roi
 
 # --- SETUP ---
-h5_path = Path("/Users/timjb/Documents/MUI/Radioonko/Daten/TrackingLog_Iceberg.h5")
+h5_path = Path("/Volumes/INTENSO/1775668627720/TrackingLog.h5")
 output_dir = Path("output")
 output_dir.mkdir(exist_ok=True)
 
