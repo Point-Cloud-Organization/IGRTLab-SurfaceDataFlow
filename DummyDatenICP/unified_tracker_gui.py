@@ -1,6 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox, simpledialog
-import h5py
+from tkinter import ttk, filedialog, messagebox
 import numpy as np
 import open3d as o3d
 import pandas as pd
@@ -9,6 +8,17 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import threading
 import os
 import time
+import json
+import sys
+from pathlib import Path
+from scipy.spatial.transform import Rotation as R
+
+# --- Import deines eigenen Loaders ---
+try:
+    from extractH5.h5_loader import H5PointCloudStream
+except ImportError:
+    sys.path.append(str(Path(__file__).resolve().parent / "DummyDatenICP"))
+    from extractH5.h5_loader import H5PointCloudStream
 
 
 class PointCloudAnalyzerApp(tk.Tk):
@@ -19,16 +29,21 @@ class PointCloudAnalyzerApp(tk.Tk):
 
         # --- Datenstruktur ---
         self.h5_path = ""
-        self.frames = []  # Liste der Punktwolken-Daten (N, 3)
-        self.timestamps = []  # Zeitstempel pro Frame
-        self.pcds = []  # Open3D PointCloud Objekte
+        self.stream = None
+        self.frames = []
+        self.timestamps = []
+        self.pcds = []
         self.current_frame = 0
 
-        self.vis = None  # Open3D Visualizer Instanz
-        self.pcd_vis = None  # Aktuelle Punktwolke im Visualizer
+        self.vis = None
+        self.pcd_vis = None
+
+        # NEU: Variablen für die ROI Bounding Box
+        self.roi_bbox = None  # Speichert die mathematische Box
+        self.bbox_vis = None  # Speichert das visuelle schwarze Gitter im Viewer
 
         self.setup_ui()
-        self.poll_o3d()  # Hält das Open3D Fenster parallel zu Tkinter am Leben
+        self.poll_o3d()
 
     def setup_ui(self):
         # --- 1. Load Data ---
@@ -39,8 +54,8 @@ class PointCloudAnalyzerApp(tk.Tk):
         self.lbl_file = ttk.Label(frame1, text="Keine Datei geladen.")
         self.lbl_file.pack(side="left", padx=10, pady=10)
 
-        # --- 2. Fast Viewer & Diagnose ---
-        frame2 = ttk.LabelFrame(self, text="2. Fast Viewer & Diagnose")
+        # --- 2. Fast Viewer ---
+        frame2 = ttk.LabelFrame(self, text="2. Fast Viewer")
         frame2.pack(fill="x", padx=10, pady=5)
 
         self.slider = ttk.Scale(frame2, from_=0, to=0, orient="horizontal", command=self.on_slider_change)
@@ -53,12 +68,9 @@ class PointCloudAnalyzerApp(tk.Tk):
         btn_frame2.pack(fill="x")
         ttk.Button(btn_frame2, text="Open3D Viewer öffnen", command=self.start_viewer).pack(side="left", padx=10,
                                                                                             pady=5)
-        ttk.Button(btn_frame2, text="H5 Diagnose (Struktur) anzeigen", command=self.show_diagnosis).pack(side="left",
-                                                                                                         padx=10,
-                                                                                                         pady=5)
 
         # --- 3. ROI (Region of Interest) ---
-        frame3 = ttk.LabelFrame(self, text="3. ROI Bereinigung")
+        frame3 = ttk.LabelFrame(self, text="3. ROI Visualisierung")
         frame3.pack(fill="x", padx=10, pady=5)
 
         self.roi_vars = {}
@@ -67,26 +79,25 @@ class PointCloudAnalyzerApp(tk.Tk):
 
         for i, axis in enumerate(['X', 'Y', 'Z']):
             ttk.Label(roi_grid, text=f"{axis} Min:").grid(row=i, column=0, padx=5, pady=2)
-            var_min = tk.DoubleVar(value=-500.0)
+            var_min = tk.DoubleVar(value=-200.0)
             ttk.Entry(roi_grid, textvariable=var_min, width=10).grid(row=i, column=1, padx=5, pady=2)
 
             ttk.Label(roi_grid, text=f"{axis} Max:").grid(row=i, column=2, padx=5, pady=2)
-            var_max = tk.DoubleVar(value=500.0)
+            var_max = tk.DoubleVar(value=200.0)
             ttk.Entry(roi_grid, textvariable=var_max, width=10).grid(row=i, column=3, padx=5, pady=2)
 
             self.roi_vars[f"{axis.lower()}_min"] = var_min
             self.roi_vars[f"{axis.lower()}_max"] = var_max
 
-        ttk.Button(frame3, text="ROI auf aktuellen Frame anwenden", command=self.apply_roi_current).pack(pady=5)
-
+        ttk.Button(frame3, text="ROI als Box einblenden (Vorschau)", command=self.apply_roi_current).pack(pady=5)
+        ttk.Button(frame3, text="ROI als JSON speichern", command=self.save_roi).pack(pady=5)
         # --- 4. DBSCAN ---
-        frame4 = ttk.LabelFrame(self, text="4. DBSCAN (Phantomwolke extrahieren)")
+        frame4 = ttk.LabelFrame(self, text="4. DBSCAN (Bereinigung)")
         frame4.pack(fill="x", padx=10, pady=5)
-
-        ttk.Button(frame4, text="DBSCAN auf alle Frames anwenden", command=self.run_dbscan).pack(pady=10)
+        ttk.Button(frame4, text="ROI zuschneiden & DBSCAN ausführen", command=self.run_dbscan).pack(pady=10)
 
         # --- 5. Tracking ---
-        frame5 = ttk.LabelFrame(self, text="5. ICP Tracking")
+        frame5 = ttk.LabelFrame(self, text="5. ICP Tracking (Point-to-Plane)")
         frame5.pack(fill="x", padx=10, pady=5)
 
         track_grid = ttk.Frame(frame5)
@@ -102,7 +113,7 @@ class PointCloudAnalyzerApp(tk.Tk):
 
         ttk.Button(frame5, text="Start Tracking", command=self.start_tracking).pack(pady=10)
 
-        # --- 6. Tracking Analyse (Das Verrückte Feature) ---
+        # --- 6. Tracking Analyse ---
         frame6 = ttk.LabelFrame(self, text="🚀 Analyse Tracking CSV")
         frame6.pack(fill="x", padx=10, pady=5)
         ttk.Button(frame6, text="CSV Ergebnisse Plotten", command=self.plot_tracking_results).pack(pady=10)
@@ -113,58 +124,44 @@ class PointCloudAnalyzerApp(tk.Tk):
         self.lbl_status = ttk.Label(self, text="Status: Bereit")
         self.lbl_status.pack(pady=5)
 
-    # ---------------------------------------------------------
-    # 1. & 2. Daten laden und H5 Viewer
-    # ---------------------------------------------------------
     def load_data(self):
         path = filedialog.askopenfilename(filetypes=[("HDF5 Files", "*.h5")])
         if not path: return
         self.h5_path = path
         self.lbl_file.config(text=os.path.basename(path))
-
         self.lbl_status.config(text="Status: Lade H5 Daten...")
         self.update()
 
-        try:
-            with h5py.File(path, 'r') as f:
-                # Annahme: Daten liegen strukturiert vor (Anpassen an deine H5-Struktur)
-                # Suchen nach Keys, die wie Frames aussehen, oder iterieren
-                keys = list(f.keys())
+        def task():
+            try:
+                if self.stream is not None:
+                    self.stream.close()
+
+                self.stream = H5PointCloudStream(Path(self.h5_path))
                 self.frames = []
                 self.timestamps = []
                 self.pcds = []
+                self.progress["maximum"] = self.stream.num_frames
 
-                # Sehr rudimentäre H5 Extraktion (muss je nach File evt. angepasst werden)
-                for i, k in enumerate(sorted(keys)):
-                    data = np.array(f[k])
-                    if data.shape[1] >= 3:
-                        points = data[:, :3]  # Nimm nur X,Y,Z
-                        self.frames.append(points)
-                        self.timestamps.append(str(k))  # Key als Timestamp
+                for i in range(self.stream.num_frames):
+                    pcd = self.stream.get_pcd(i, voxel_size=1.5)
+                    self.pcds.append(pcd)
+                    self.frames.append(np.asarray(pcd.points))
+                    ts_steady, _ = self.stream.get_timestamps(i)
+                    self.timestamps.append(str(ts_steady))
 
-                        pcd = o3d.geometry.PointCloud()
-                        pcd.points = o3d.utility.Vector3dVector(points)
-                        self.pcds.append(pcd)
+                    if i % 10 == 0:
+                        self.progress["value"] = i + 1
+                        self.update_idletasks()
 
-            self.slider.config(to=len(self.frames) - 1)
-            self.lbl_status.config(text=f"Status: {len(self.frames)} Frames geladen.")
-            self.on_slider_change(0)
-        except Exception as e:
-            messagebox.showerror("Fehler", f"Konnte H5 nicht laden:\n{e}")
+                # Thread-safe UI Updates
+                self.after(0, lambda: self.slider.config(to=len(self.pcds) - 1))
+                self.after(0, lambda: self.lbl_status.config(text=f"Status: {len(self.pcds)} Frames geladen."))
+                self.after(0, lambda: self.on_slider_change(0))
+            except Exception as e:
+                self.after(0, lambda: messagebox.showerror("Fehler", f"Konnte H5 nicht laden:\n{e}"))
 
-    def show_diagnosis(self):
-        if not self.h5_path: return
-        diag_win = tk.Toplevel(self)
-        diag_win.title("H5 Diagnose")
-        diag_win.geometry("400x500")
-        text = tk.Text(diag_win, wrap="word")
-        text.pack(expand=True, fill="both")
-
-        def print_struct(name, obj):
-            text.insert("end", f"{name} : {type(obj)}\n")
-
-        with h5py.File(self.h5_path, 'r') as f:
-            f.visititems(print_struct)
+        threading.Thread(target=task, daemon=True).start()
 
     def on_slider_change(self, val):
         if not self.frames: return
@@ -175,30 +172,54 @@ class PointCloudAnalyzerApp(tk.Tk):
 
     def start_viewer(self):
         if not self.frames: return
+
         if self.vis is None:
             self.vis = o3d.visualization.Visualizer()
             self.vis.create_window(window_name="H5 Fast Viewer")
+
+            # Punktwolke hinzufügen
             self.pcd_vis = o3d.geometry.PointCloud()
+            if len(self.pcds[self.current_frame].points) > 0:
+                self.pcd_vis.points = self.pcds[self.current_frame].points
+                if self.pcds[self.current_frame].has_colors():
+                    self.pcd_vis.colors = self.pcds[self.current_frame].colors
+            else:
+                self.pcd_vis.points = o3d.utility.Vector3dVector(np.array([[0, 0, 0]]))
             self.vis.add_geometry(self.pcd_vis)
+
+            # NEU: Leere Bounding Box (LineSet) hinzufügen
+            self.bbox_vis = o3d.geometry.LineSet()
+            self.vis.add_geometry(self.bbox_vis)
+
+            # Kamera auf Zentrum setzen
+            self.vis.reset_view_point(True)
+
         self.update_viewer_geometry()
 
     def update_viewer_geometry(self):
         if self.vis and self.frames:
-            self.pcd_vis.points = self.pcds[self.current_frame].points
-            self.pcd_vis.colors = self.pcds[self.current_frame].colors
+            pcd_current = self.pcds[self.current_frame]
+
+            if len(pcd_current.points) == 0:
+                self.lbl_status.config(text="Status: Warnung - Aktueller Frame hat 0 Punkte!")
+                return
+
+            self.pcd_vis.points = pcd_current.points
+            if pcd_current.has_colors():
+                self.pcd_vis.colors = pcd_current.colors
+
             self.vis.update_geometry(self.pcd_vis)
             self.vis.poll_events()
             self.vis.update_renderer()
 
     def poll_o3d(self):
-        """Hält das Open3D Fenster responsiv, ohne Tkinter zu blockieren."""
         if self.vis is not None:
             self.vis.poll_events()
             self.vis.update_renderer()
         self.after(50, self.poll_o3d)
 
     # ---------------------------------------------------------
-    # 3. ROI
+    # 3. ROI (Neu: Rendert nur eine schwarze Box)
     # ---------------------------------------------------------
     def apply_roi_current(self):
         if not self.frames: return
@@ -206,52 +227,97 @@ class PointCloudAnalyzerApp(tk.Tk):
         y_min, y_max = self.roi_vars['y_min'].get(), self.roi_vars['y_max'].get()
         z_min, z_max = self.roi_vars['z_min'].get(), self.roi_vars['z_max'].get()
 
-        bbox = o3d.geometry.AxisAlignedBoundingBox(
+        # Mathematische Bounding Box erstellen und speichern
+        self.roi_bbox = o3d.geometry.AxisAlignedBoundingBox(
             min_bound=(x_min, y_min, z_min),
             max_bound=(x_max, y_max, z_max)
         )
 
-        # Test an aktuellem Frame
-        cropped_pcd = self.pcds[self.current_frame].crop(bbox)
-        self.pcds[self.current_frame] = cropped_pcd
-        self.update_viewer_geometry()
-        self.lbl_status.config(text="Status: ROI auf aktuellen Frame angewendet.")
+        # Visuelles Drahtgitter-Modell (LineSet) erstellen
+        if self.bbox_vis is not None:
+            lines = o3d.geometry.LineSet.create_from_axis_aligned_bounding_box(self.roi_bbox)
+            lines.paint_uniform_color([0, 0, 0])  # Schwarz rendern
 
+            # Update des existierenden LineSets im Viewer
+            self.bbox_vis.points = lines.points
+            self.bbox_vis.lines = lines.lines
+            self.bbox_vis.colors = lines.colors
+            self.vis.update_geometry(self.bbox_vis)
+
+        self.lbl_status.config(text="Status: ROI-Box Vorschau aktiv. (Punkte sind noch da)")
+
+    def save_roi(self):
+        if not self.h5_path:
+            messagebox.showwarning("Warnung", "Bitte lade zuerst eine H5-Datei!")
+            return
+
+        if self.roi_bbox is None:
+            messagebox.showwarning("Warnung",
+                                   "Bitte klicke zuerst auf 'ROI als Box einblenden', um die Box zu definieren!")
+            return
+
+        # Dateiname aus der H5-Datei generieren
+        current_time = time.strftime("%H%M%S")
+        h5_basename = os.path.splitext(os.path.basename(self.h5_path))[0]
+        roi_filename = f"roi_{h5_basename}_{current_time}.json"
+
+        # Koordinaten auslesen
+        min_b = self.roi_bbox.get_min_bound()
+        max_b = self.roi_bbox.get_max_bound()
+
+        roi_data = {
+            "x": [float(min_b[0]), float(max_b[0])],
+            "y": [float(min_b[1]), float(max_b[1])],
+            "z": [float(min_b[2]), float(max_b[2])]
+        }
+
+        try:
+            with open(roi_filename, 'w') as f:
+                json.dump(roi_data, f, indent=4)
+            self.lbl_status.config(text=f"Status: ROI erfolgreich gespeichert als {roi_filename}")
+            messagebox.showinfo("Erfolg", f"ROI wurde gespeichert als:\n{roi_filename}")
+        except Exception as e:
+            messagebox.showerror("Fehler", f"Konnte ROI nicht speichern:\n{e}")
     # ---------------------------------------------------------
-    # 4. DBSCAN
+    # 4. DBSCAN (Neu: Wendet ROI *hier* erst hart an)
     # ---------------------------------------------------------
     def run_dbscan(self):
         if not self.frames: return
 
         def task():
-            self.lbl_status.config(text="Status: Führe DBSCAN aus (Fenster ggf. kurz eingefroren)...")
+            self.lbl_status.config(text="Status: Beschneide mit ROI und führe DBSCAN aus...")
             self.progress["maximum"] = len(self.pcds)
 
             for i, pcd in enumerate(self.pcds):
-                # DBSCAN Parameter ggf. an deine Werte anpassen
-                labels = np.array(pcd.cluster_dbscan(eps=20.0, min_points=10, print_progress=False))
-                if len(labels) == 0: continue
+                # 1. ZUERST auf ROI zuschneiden, falls definiert
+                if self.roi_bbox is not None:
+                    pcd = pcd.crop(self.roi_bbox)
 
-                # Finde das größte Cluster (Phantomwolke)
+                # 2. DANN DBSCAN ausführen
+                labels = np.array(pcd.cluster_dbscan(eps=20.0, min_points=10, print_progress=False))
+                if len(labels) == 0:
+                    self.pcds[i] = pcd
+                    continue
+
                 max_label = labels.max()
                 if max_label >= 0:
                     counts = np.bincount(labels[labels >= 0])
                     phantom_label = np.argmax(counts)
-
-                    # Behalte nur Indizes des Phantom-Clusters
                     phantom_indices = np.where(labels == phantom_label)[0]
                     self.pcds[i] = pcd.select_by_index(phantom_indices)
 
-                self.progress["value"] = i + 1
-                self.update_idletasks()
+                if i % 10 == 0:
+                    self.progress["value"] = i + 1
+                    self.update_idletasks()
 
-            self.lbl_status.config(text="Status: DBSCAN abgeschlossen.")
-            self.update_viewer_geometry()
+            self.lbl_status.config(text="Status: ROI & DBSCAN abgeschlossen. (Viewer updatet jetzt)")
+            # Viewer updaten, damit man das saubere Ergebnis sieht
+            self.after(0, self.update_viewer_geometry)
 
         threading.Thread(target=task, daemon=True).start()
 
     # ---------------------------------------------------------
-    # 5. Tracking
+    # 5. Tracking (Sichert ab, falls DBSCAN übersprungen wurde)
     # ---------------------------------------------------------
     def start_tracking(self):
         if not self.frames: return
@@ -262,8 +328,11 @@ class PointCloudAnalyzerApp(tk.Tk):
         start_idx = int(start_str) if start_str else 0
         end_idx = int(end_str) if end_str else len(self.pcds) - 1
 
-        # Speicherort abfragen
-        default_name = f"ICP_{os.path.basename(self.h5_path)}_{int(time.time())}.csv"
+        # --- ERSETZEN IN start_tracking ---
+        current_time = time.strftime("%H%M%S")
+        h5_basename = os.path.splitext(os.path.basename(self.h5_path))[0]
+        default_name = f"ICP_{h5_basename}_{current_time}.csv"
+
         save_path = filedialog.asksaveasfilename(
             initialfile=default_name,
             defaultextension=".csv",
@@ -272,46 +341,77 @@ class PointCloudAnalyzerApp(tk.Tk):
         if not save_path: return
 
         def task():
-            self.lbl_status.config(text=f"Status: Tracking von Frame {start_idx} bis {end_idx}...")
+            self.lbl_status.config(text=f"Status: Tracking (Point-to-Plane) von Frame {start_idx} bis {end_idx}...")
             self.progress["maximum"] = end_idx - start_idx
 
             results = []
-            target = self.pcds[start_idx]  # initiales Target
+
+            # Referenz Frame
+            ref_pcd = self.pcds[start_idx]
+            # Zur Sicherheit ROI anwenden, falls DBSCAN nicht geklickt wurde
+            if self.roi_bbox is not None:
+                ref_pcd = ref_pcd.crop(self.roi_bbox)
+
+            ref_pcd.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=5.0, max_nn=30))
+
+            last_phantom_trans = np.eye(4)
 
             for i in range(start_idx, end_idx + 1):
-                source = self.pcds[i]
+                source_pcd = self.pcds[i]
                 ts = self.timestamps[i]
 
-                # --- HIER TRACKING_V2.PY LOGIK EINSETZEN ---
-                # Placeholder ICP:
-                trans_init = np.eye(4)
-                threshold = 50.0
+                # Auch hier: Zur Sicherheit ROI anwenden
+                if self.roi_bbox is not None:
+                    source_pcd = source_pcd.crop(self.roi_bbox)
+
+                source_pcd.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=5.0, max_nn=30))
+                init_guess = np.linalg.inv(last_phantom_trans)
+
                 reg_p2p = o3d.pipelines.registration.registration_icp(
-                    source, target, threshold, trans_init,
-                    o3d.pipelines.registration.TransformationEstimationPointToPoint()
+                    source_pcd, ref_pcd, 30.0, init_guess,
+                    o3d.pipelines.registration.TransformationEstimationPointToPlane()
                 )
 
-                # Extrahiere Translation & Rotation
-                T = reg_p2p.transformation
-                tx, ty, tz = T[0, 3], T[1, 3], T[2, 3]
-                # Einfache Näherung für Euler-Winkel aus Rotationsmatrix für den Placeholder
-                rx, ry, rz = np.arctan2(T[2, 1], T[2, 2]), np.arctan2(-T[2, 0],
-                                                                      np.sqrt(T[2, 1] ** 2 + T[2, 2] ** 2)), np.arctan2(
-                    T[1, 0], T[0, 0])
+                phantom_trans = np.linalg.inv(reg_p2p.transformation)
+                last_phantom_trans = phantom_trans
 
-                rmse = reg_p2p.inlier_rmse
-                score = reg_p2p.fitness * 100
+                tx, ty, tz = phantom_trans[:3, 3]
+                euler = R.from_matrix(phantom_trans[:3, :3]).as_euler('xyz')
 
-                results.append([ts, tx, ty, tz, rx, ry, rz, score, rmse])
+                results.append({
+                    "Timestamp (steady)": ts,
+                    "Current Tx": tx, "Ty": ty, "Tz": tz,
+                    "Rx": euler[0], "Ry": euler[1], "Rz": euler[2],
+                    "Score": reg_p2p.fitness * 100, "RMSE3D": reg_p2p.inlier_rmse
+                })
 
-                self.progress["value"] = i - start_idx + 1
-                self.update_idletasks()
+                if i % 5 == 0:
+                    self.progress["value"] = i - start_idx + 1
+                    self.update_idletasks()
 
-            # Speichern
-            df = pd.DataFrame(results,
-                              columns=["Timestamp (steady)", "Current Tx", "Ty", "Tz", "Rx", "Ry", "Rz", "Score",
-                                       "RMSE3D"])
-            df.to_csv(save_path, index=False)
+            df = pd.DataFrame(results)
+
+            # Neue Logik mit Header und ROI
+            with open(save_path, 'w', encoding='utf-8') as f:
+                # Zeile 1: Pfad
+                f.write(f"H5 Tracking Path:,{self.h5_path},,,,,,\n")
+                # Zeile 2: Header für ROI
+                f.write("ROI Config,Axis,Min,Max,,,,,\n")
+
+                # Zeile 3-5: ROI Koordinaten (falls vorhanden)
+                if self.roi_bbox is not None:
+                    min_b = self.roi_bbox.get_min_bound()
+                    max_b = self.roi_bbox.get_max_bound()
+                    f.write(f",X,{min_b[0]:.2f},{max_b[0]:.2f},,,,,\n")
+                    f.write(f",Y,{min_b[1]:.2f},{max_b[1]:.2f},,,,,\n")
+                    f.write(f",Z,{min_b[2]:.2f},{max_b[2]:.2f},,,,,\n")
+                else:
+                    f.write(",X,None,None,,,,,\n")
+                    f.write(",Y,None,None,,,,,\n")
+                    f.write(",Z,None,None,,,,,\n")
+
+                # Danach das eigentliche Pandas DataFrame schreiben
+                df.to_csv(f, index=False, lineterminator='\n')
             self.lbl_status.config(text=f"Status: Tracking beendet. Gespeichert in {os.path.basename(save_path)}")
 
         threading.Thread(target=task, daemon=True).start()
@@ -322,15 +422,19 @@ class PointCloudAnalyzerApp(tk.Tk):
     def plot_tracking_results(self):
         csv_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
         if not csv_path: return
+        # Überspringe dynamisch die Meta-Zeilen, bis der Header "Timestamp" gefunden wird
+        skip_lines = 0
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            for i, line in enumerate(f):
+                if "Timestamp (steady)" in line or "Current Tx" in line:
+                    skip_lines = i
+                    break
 
-        df = pd.read_csv(csv_path)
-
-        # Neues Fenster
+        df = pd.read_csv(csv_path, skiprows=skip_lines)
         plot_win = tk.Toplevel(self)
         plot_win.title(f"Tracking Analyse - {os.path.basename(csv_path)}")
         plot_win.geometry("900x700")
 
-        # Checkboxen für Sichtbarkeiten
         controls = ttk.Frame(plot_win)
         controls.pack(fill="x", padx=10, pady=5)
 
@@ -343,8 +447,7 @@ class PointCloudAnalyzerApp(tk.Tk):
         def update_plot():
             ax1.clear()
             ax2.clear()
-
-            x_vals = range(len(df))  # Oder pd.to_datetime wenn steady timestamp parsebar ist
+            x_vals = range(len(df))
 
             if show_trans.get():
                 if "Current Tx" in df.columns:
@@ -353,7 +456,6 @@ class PointCloudAnalyzerApp(tk.Tk):
                     ax1.plot(x_vals, df["Tz"], label="Tz", linestyle='-')
             if show_rot.get():
                 if "Rx" in df.columns:
-                    # Rotations auf zweiter Achse oder gestrichelt
                     ax1.plot(x_vals, df["Rx"], label="Rx", linestyle='--')
                     ax1.plot(x_vals, df["Ry"], label="Ry", linestyle='--')
                     ax1.plot(x_vals, df["Rz"], label="Rz", linestyle='--')

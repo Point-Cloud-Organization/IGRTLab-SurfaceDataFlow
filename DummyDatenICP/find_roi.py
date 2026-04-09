@@ -103,5 +103,5 @@ def run_interactive_roi(h5_file: Path):
 
 if __name__ == "__main__":
     # Test-Aufruf, falls du das Skript doch mal alleine startest
-    test_h5 = Path("/Users/timjb/PycharmProjects/Point_Cloud/DemoData/record.h5")
+    test_h5 = Path("/archive/DemoData/record.h5")
     run_interactive_roi(test_h5)

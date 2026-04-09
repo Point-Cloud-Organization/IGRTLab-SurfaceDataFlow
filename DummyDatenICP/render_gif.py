@@ -6,14 +6,14 @@ from pathlib import Path
 from extractH5.h5_loader import H5PointCloudStream
 
 # --- SETUP ---
-h5_path = Path("/Users/timjb/Documents/MUI/Radioonko/Daten/DemoData/record.h5")
-roi_path = Path("Calibration/roi_record_3003.json")
-output_video = "phantom_analysis_highres.mp4"
+h5_path = Path("/Users/timjb/Documents/MUI/Radioonko/Daten/1775668627720/TrackingLog.h5")
+roi_path = Path("/Users/timjb/PycharmProjects/Point_Cloud/DummyDatenICP/roi_TrackingLog_124758.json")
+output_video = "surf_analysis_highres.mp4"
 fps = 15
 
 # Frame-Bereich für das Shifting
-START_FRAME = 160
-END_FRAME = 190
+START_FRAME = 40
+END_FRAME = 180
 
 
 def extract_main_cluster(pcd):

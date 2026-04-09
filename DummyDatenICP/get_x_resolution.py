@@ -5,7 +5,7 @@ from pathlib import Path
 from extractH5.h5_loader import H5PointCloudStream
 
 # --- PFADE ANPASSEN ---
-h5_path = Path("/Users/timjb/PycharmProjects/Point_Cloud/DemoData/record.h5")
+h5_path = Path("/archive/DemoData/record.h5")
 roi_path = Path("Calibration/roi_config.json")
 
 # ROI laden

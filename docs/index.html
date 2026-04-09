@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGRT Digital Twin Project</title>
+    <style>
+        body {
+            font-family: 'Calibri', 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .logo {
+            max-width: 200px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #1a3a5a;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        .authors {
+            font-style: italic;
+            color: #666;
+        }
+        .figure-container {
+            margin-bottom: 30px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .figure-container h2 {
+            font-size: 1.1rem;
+            color: #1a3a5a;
+            border-left: 4px solid #1a3a5a;
+            padding-left: 10px;
+            margin-bottom: 15px;
+        }
+        img, video {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+        .btn-code {
+            display: inline-block;
+            background: #1a3a5a;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <img src="images/uni_logo.png" alt="University Logo" class="logo">
+
+        <h1>Towards a Digital Twin in SGRT: Easy Extraction and Rigid Tracking of Clinical Surface and Thermal Point Clouds</h1>
+
+        <p class="authors">Vorname Nachname, Vorname Nachname, et al.</p>
+
+        <a href="https://github.com/DEIN_USERNAME/SGRT-Flow" class="btn-code">View Python Code on GitHub</a>
+    </header>
+
+    <main>
+        <div class="figure-container">
+            <h2>Fig. 1: Multimodal Surface & Thermal Point Cloud</h2>
+            <video autoplay loop muted playsinline poster="images/video_preview.jpg">
+                <source src="results/phantom_boomerang.mp4" type="video/mp4">
+                Ihr Browser unterstützt keine Videos.
+            </video>
+        </div>
+
+        <div class="figure-container">
+            <h2>Fig. 2: Translational Tracking (ICP vs. Ground Truth)</h2>
+            <img src="results/Translation_Plot.svg" alt="Translational Plot">
+        </div>
+
+        <div class="figure-container">
+            <h2>Fig. 3: Rotational Tracking (All Axes)</h2>
+            <img src="results/Rotation_Plot.svg" alt="Rotational Plot">
+        </div>
+
+        <div class="figure-container">
+            <h2>Fig. 4: Registration Error (RMSE)</h2>
+            <img src="results/RMSE_Plot.svg" alt="RMSE Plot">
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 - Clinical SGRT Research Group</p>
+    </footer>
+
+</body>
+</html>

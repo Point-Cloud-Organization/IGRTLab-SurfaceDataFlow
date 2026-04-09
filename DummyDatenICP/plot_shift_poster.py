@@ -1,95 +1,93 @@
-import open3d as o3d
 import numpy as np
+import open3d as o3d
 import json
+import sys
 from pathlib import Path
-from extractH5.h5_loader import H5PointCloudStream
 
-# --- SETUP ---
-h5_path = Path("/Users/timjb/Documents/MUI/Radioonko/Daten/TrackingLog_Iceberg.h5")
-# WICHTIG: Trag hier den exakten Namen deiner erstellten ROI-JSON ein!
-roi_path = Path("Calibration/roi_record_iceberg.json")
-
-# Welcher Frame soll mit Frame 0 (Referenz) verglichen werden?
-# (Such dir den Frame aus, wo die 10mm Verschiebung am deutlichsten ist, z.B. 150)
-SHIFT_FRAME_INDEX = 300
+# --- Import deines eigenen Loaders ---
+try:
+    from extractH5.h5_loader import H5PointCloudStream
+except ImportError:
+    sys.path.append(str(Path(__file__).resolve().parent / "DummyDatenICP"))
+    from extractH5.h5_loader import H5PointCloudStream
 
 
-def extract_main_cluster(pcd, eps=15.0, min_points=50):
-    """
-    Entfernt "fliegende" Punkte durch DBSCAN Clustering.
-    Behält nur den größten zusammenhängenden Punktewolken-Cluster.
-    eps: Maximaler Abstand in mm, damit Punkte als zusammenhängend gelten.
-    """
-    with o3d.utility.VerbosityContextManager(o3d.utility.VerbosityLevel.Error) as cm:
-        labels = np.array(pcd.cluster_dbscan(eps=eps, min_points=min_points, print_progress=False))
-
+def extract_main_phantom(pcd, eps=20.0, min_points=10):
+    """Führt DBSCAN aus und gibt nur den größten Cluster zurück."""
+    labels = np.array(pcd.cluster_dbscan(eps=eps, min_points=min_points, print_progress=False))
     if len(labels) == 0:
         return pcd
-
     max_label = labels.max()
-    if max_label < 0:  # Alle Punkte sind Rauschen
-        return pcd
-
-    # Zähle, welches Label (welcher Cluster) die meisten Punkte hat
-    counts = np.bincount(labels[labels >= 0])
-    largest_cluster_idx = counts.argmax()
-
-    # Extrahiere nur die Punkte des größten Clusters
-    main_cluster_indices = np.where(labels == largest_cluster_idx)[0]
-    pcd_clean = pcd.select_by_index(main_cluster_indices)
-
-    return pcd_clean
+    if max_label >= 0:
+        counts = np.bincount(labels[labels >= 0])
+        phantom_label = np.argmax(counts)
+        phantom_indices = np.where(labels == phantom_label)[0]
+        return pcd.select_by_index(phantom_indices)
+    return pcd
 
 
 def main():
-    # 1. ROI Laden (Dient jetzt nur noch der Visualisierung!)
-    with open(roi_path, "r") as f:
+    # --- KONFIGURATION ---
+    h5_path = Path("/Users/timjb/Documents/MUI/Radioonko/Daten/1775668627720/TrackingLog.h5")
+    roi_path = Path("roi_TrackingLog.json")  # Deine in der GUI gespeicherte ROI
+
+    frame_x1 = 40  # Basis-Frame (gesamter roher Raum)
+    frame_x2 = 110  # Verschobener Frame (nur ROI Ausschnitt + DBSCAN)
+
+    # Farben (RGB)
+    color_base = [0.1, 0.4, 0.8]  # Blau für den kompletten Raum
+    color_shift = [1.0, 0.5, 0.0]  # Orange für die verschobene ROI
+
+    output_filename = f"poster_model_{h5_path.stem}.ply"
+
+    print(f"Lade ROI aus {roi_path}...")
+    with open(roi_path, 'r') as f:
         roi_data = json.load(f)
-    roi_bbox = o3d.geometry.AxisAlignedBoundingBox(roi_data["min_bound"], roi_data["max_bound"])
-    roi_bbox.color = (0.2, 0.8, 0.2)  # Schönes Grün für die Box
 
+    roi_bbox = o3d.geometry.AxisAlignedBoundingBox(
+        min_bound=(roi_data["x"][0], roi_data["y"][0], roi_data["z"][0]),
+        max_bound=(roi_data["x"][1], roi_data["y"][1], roi_data["z"][1])
+    )
+
+    print("Öffne H5 Stream...")
     with H5PointCloudStream(h5_path) as stream:
-        # 2. Referenz Frame (0) laden -> WICHTIG: roi_bbox weggelassen!
-        print("Lade komplette Referenz (Frame 0)...")
-        pcd_ref = stream.get_pcd(0, voxel_size=1.5)  # <--- HIER GEÄNDERT
-        pcd_ref = extract_main_cluster(pcd_ref)
-        pcd_ref.paint_uniform_color([0.1, 0.5, 0.8])  # Poster-Blau
-        pcd_ref.estimate_normals()
+        # ----------------------------------------------------
+        # SCHRITT 1: Basis-Frame (x1) - Das KOMPLETTE Roh-Bild
+        # ----------------------------------------------------
+        print(f"Verarbeite Frame {frame_x1} (Basis - Komplett Roh)...")
+        # Wir laden Frame 1 komplett ohne Crop.
+        pcd_base = stream.get_pcd(frame_x1, voxel_size=1.5)
 
-        # 3. Verschobenen Frame laden -> WICHTIG: roi_bbox weggelassen!
-        print(f"Lade komplettes verschobenes Phantom (Frame {SHIFT_FRAME_INDEX})...")
-        pcd_shift = stream.get_pcd(SHIFT_FRAME_INDEX, voxel_size=1.5)  # <--- HIER GEÄNDERT
-        pcd_shift = extract_main_cluster(pcd_shift)
-        pcd_shift.paint_uniform_color([0.9, 0.4, 0.1])  # Poster-Orange
-        pcd_shift.estimate_normals()
+        # WICHTIG: Kein DBSCAN mehr für Frame 1!
+        # Direkt blau einfärben (überschreibt die z-Achsen-Farben aus der Rohdatei)
+        pcd_base.paint_uniform_color(color_base)
 
-        # 4. Visualisierung (Hier geben wir die Box wieder dazu)
-    print("\n--- Viewer für Poster-Screenshot geöffnet ---")
-    vis = o3d.visualization.Visualizer()
-    vis.create_window(window_name="Phantom Shift Visualization", width=1920, height=1080)
+        # ----------------------------------------------------
+        # SCHRITT 2: Verschobener Frame (x2) - Nur der ROI Bereich
+        # ----------------------------------------------------
+        print(f"Verarbeite Frame {frame_x2} (Verschiebung - ROI & DBSCAN)...")
+        # Hier wie gehabt: Gleich beim Laden auf die Box zuschneiden
+        pcd_shift_raw = stream.get_pcd(frame_x2, roi_bbox=roi_bbox, voxel_size=1.5)
 
-    vis.add_geometry(pcd_ref)
-    vis.add_geometry(pcd_shift)
-    vis.add_geometry(roi_bbox)  # <--- Box wird on top gerendert
+        # Hier ist DBSCAN gewollt, damit die orange Box saubere Ränder ohne Rauschen hat
+        pcd_shift_clean = extract_main_phantom(pcd_shift_raw)
 
+        # Orange einfärben
+        pcd_shift_clean.paint_uniform_color(color_shift)
 
-    # Hintergrund auf Weiß stellen (besser für Poster)
-    opt = vis.get_render_option()
-    opt.background_color = np.asarray([1, 1, 1])
-    opt.point_size = 3.0  # Punkte etwas größer machen
+    # ----------------------------------------------------
+    # SCHRITT 3: Zusammenführen und Speichern
+    # ----------------------------------------------------
+    print("Füge Punktwolken zusammen...")
+    poster_pcd = pcd_base + pcd_shift_clean
 
-    # Beide Punktwolken zu einer einzigen fusionieren
-    pcd_combined = o3d.geometry.PointCloud()
-    pcd_combined += pcd_ref
-    pcd_combined += pcd_shift
+    print(f"Speichere {output_filename} für Sketchfab...")
+    o3d.io.write_point_cloud(output_filename, poster_pcd, write_ascii=False)
 
-    # Als PLY für Sketchfab exportieren
-    export_path = "output/poster_3d_modell.ply"
-    o3d.io.write_point_cloud(export_path, pcd_combined)
-    print(f"✅ 3D-Modell für Sketchfab exportiert: {export_path}")
+    print("✅ Fertig! Modell gespeichert.")
 
-    vis.run()
-    vis.destroy_window()
+    # Direkte Vorschau öffnen
+    o3d.visualization.draw_geometries([poster_pcd], window_name="Poster PLY Vorschau")
 
 
 if __name__ == "__main__":
