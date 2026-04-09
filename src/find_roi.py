@@ -72,7 +72,7 @@ def run_interactive_roi(h5_file: Path):
             config_filename = f"roi_{base_name}{suffix}.json"
 
             # 3. Speichern
-            calib_dir = Path("Calibration")
+            calib_dir = Path("../data/DummyDatenICP/Calibration")
             calib_dir.mkdir(exist_ok=True)
             config_path = calib_dir / config_filename
 

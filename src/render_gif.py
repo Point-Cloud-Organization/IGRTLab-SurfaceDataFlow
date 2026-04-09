@@ -7,7 +7,7 @@ from extractH5.h5_loader import H5PointCloudStream
 
 # --- SETUP ---
 h5_path = Path("/Users/timjb/Documents/MUI/Radioonko/Daten/1775668627720/TrackingLog.h5")
-roi_path = Path("/Users/timjb/PycharmProjects/Point_Cloud/DummyDatenICP/roi_TrackingLog_124758.json")
+roi_path = Path("/data/DummyDatenICP/roi_TrackingLog_124758.json")
 output_video = "surf_analysis_highres.mp4"
 fps = 15
 

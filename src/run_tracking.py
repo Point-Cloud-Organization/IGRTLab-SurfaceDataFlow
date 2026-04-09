@@ -10,8 +10,8 @@ from extractH5.h5_loader import H5PointCloudStream
 # --- SETUP ---
 # Pfade anpassen (Nutze den Pfad, der in find_roi.py geklappt hat)
 h5_path = Path("/Volumes/INTENSO/01_Data/01_ETD/hd5/patients/1768817211649/TrackingLog.h5")
-roi_path = Path("Calibration/roi_config_1768817211649.json")
-output_dir = Path("output")
+roi_path = Path("../data/DummyDatenICP/Calibration/roi_config_1768817211649.json")
+output_dir = Path("../data/DummyDatenICP/output")
 output_dir.mkdir(exist_ok=True)
 
 # 1. ROI Laden

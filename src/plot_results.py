@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 def main():
     # Pfad zur JSON-Datei
-    json_path = pathlib.Path("/Users/timjb/PycharmProjects/Point_Cloud/DummyDatenICP/output/icp_results.json")
+    json_path = pathlib.Path("/data/DummyDatenICP/output/icp_results.json")
 
     if not json_path.exists():
         print(f"Datei nicht gefunden: {json_path}")

@@ -12,7 +12,7 @@ from find_roi import run_interactive_roi
 
 # --- SETUP ---
 h5_path = Path("/Volumes/INTENSO/1775668627720/TrackingLog.h5")
-output_dir = Path("output")
+output_dir = Path("../data/DummyDatenICP/output")
 output_dir.mkdir(exist_ok=True)
 
 

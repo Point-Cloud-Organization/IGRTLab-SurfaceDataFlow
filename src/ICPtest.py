@@ -53,7 +53,7 @@ def preprocess_pointcloud(file_path: pathlib.Path, isocenter_matrix: ArrayLike) 
 
 def main():
     # 1. Hauptpfad definieren
-    folder = pathlib.Path("/Users/timjb/PycharmProjects/Point_Cloud/DummyDatenICP")  # <-- Hier deinen Ordnernamen einsetzen
+    folder = pathlib.Path("/data/DummyDatenICP")  # <-- Hier deinen Ordnernamen einsetzen
 
     if not folder.exists():
         print(f"Ordner {folder} nicht gefunden!")

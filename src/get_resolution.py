@@ -6,7 +6,7 @@ from extractH5.h5_loader import H5PointCloudStream
 
 # Pfade anpassen
 h5_path = Path("/archive/DemoData/record.h5")
-roi_path = Path("Calibration/roi_config.json")
+roi_path = Path("../data/DummyDatenICP/Calibration/roi_config.json")
 
 # ROI laden
 with open(roi_path, "r") as f:
