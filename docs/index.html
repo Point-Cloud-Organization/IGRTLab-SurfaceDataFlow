@@ -106,9 +106,10 @@
     <header>
         <img src="images/uni_logo.png" alt="University Logo" class="logo">
 
-        <h1>Towards a Digital Twin in SGRT: Easy Extraction and Rigid Tracking of Clinical Surface and Thermal Point Clouds</h1>
+        <h1>Towards solid QA and a Digital Twin in SGRT: Extraction, Processing and Tracking of Clinical Surface Point Clouds
+</h1>
 
-        <p class="authors">Vorname Nachname, Vorname Nachname, et al.</p>
+        <p class="authors">Schneider A.M. , Buck T., Ganswindt U., and Kollotzek S.</p>
 
         <a href="https://github.com/Point-Cloud-Organization/IGRTLab-SurfaceDataFlow" class="btn-code">View Python Code on GitHub</a>
     </header>
@@ -116,30 +117,32 @@
    <main class="main-content">
 
         <div class="figure-container">
-            <h2>Fig. 1: Titel für das erste 3D-Modell (z.B. Raw SGRT Point Cloud)</h2>
+            <h2>Fig. 1: Longitudinal 10mm shift in QA phantom for SGRT</h2>
             <div class="media-wrapper">
                 <div class="sketchfab-embed-wrapper"> <iframe title="Longitudinal 10mm shift in QA phantom for SGRT" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" width="100%" height="450" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share src="https://sketchfab.com/models/f65034940e0c4f31859218f1baa00387/embed"> </iframe> <p style="font-size: 13px; font-weight: normal; margin: 5px; color: #4A4A4A;"> <a href="https://sketchfab.com/3d-models/longitudinal-10mm-shift-in-qa-phantom-for-sgrt-f65034940e0c4f31859218f1baa00387?utm_medium=embed&utm_campaign=share-popup&utm_content=f65034940e0c4f31859218f1baa00387" target="_blank" rel="nofollow" style="font-weight: bold; color: #1CAAD9;"> Longitudinal 10mm shift in QA phantom for SGRT </a> by <a href="https://sketchfab.com/tim-buck?utm_medium=embed&utm_campaign=share-popup&utm_content=f65034940e0c4f31859218f1baa00387" target="_blank" rel="nofollow" style="font-weight: bold; color: #1CAAD9;"> tim-buck </a> on <a href="https://sketchfab.com?utm_medium=embed&utm_campaign=share-popup&utm_content=f65034940e0c4f31859218f1baa00387" target="_blank" rel="nofollow" style="font-weight: bold; color: #1CAAD9;">Sketchfab</a></p></div>
                 </div>
-            <p class="caption">Caption: Hier beschreibst du kurz, was der User in diesem interaktiven Modell betrachten kann.</p>
+            <p class="caption">Caption: This model illustrates our in-house QA phantom in its initial state (blue), which serves as the reference for ICP tracking.
+
+Superimposed in orange is a longitudinally shifted frame (+10 mm), precisely aligned to visualize the system’s detection accuracy. To ensure a clean, artifact-free representation, the shifted point cloud was first constrained manually by a Bounding Box (ROI), that includes our phantom, and the phantom surface itself was isolated from background noise using the DBSCAN algorithm.</p>
         </div>
 
         <div class="figure-container">
-            <h2>Fig. 2: Titel für das zweite 3D-Modell (z.B. Tracked Phantom Position)</h2>
+            <h2>Fig. 2: Longitudinal 10mm Shift of the Brainlab Lola Phantom</h2>
             <div class="media-wrapper">
                 <div class="sketchfab-embed-wrapper"> <iframe title="Recorded 10mm Shift of the Brainlab Lola Phantom" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" width="100%" height="450" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share src="https://sketchfab.com/models/92746ce16d1d48439423323c7125e107/embed"> </iframe> <p style="font-size: 13px; font-weight: normal; margin: 5px; color: #4A4A4A;"> <a href="https://sketchfab.com/3d-models/recorded-10mm-shift-of-the-brainlab-lola-phantom-92746ce16d1d48439423323c7125e107?utm_medium=embed&utm_campaign=share-popup&utm_content=92746ce16d1d48439423323c7125e107" target="_blank" rel="nofollow" style="font-weight: bold; color: #1CAAD9;"> Recorded 10mm Shift of the Brainlab Lola Phantom </a> by <a href="https://sketchfab.com/tim-buck?utm_medium=embed&utm_campaign=share-popup&utm_content=92746ce16d1d48439423323c7125e107" target="_blank" rel="nofollow" style="font-weight: bold; color: #1CAAD9;"> tim-buck </a> on <a href="https://sketchfab.com?utm_medium=embed&utm_campaign=share-popup&utm_content=92746ce16d1d48439423323c7125e107" target="_blank" rel="nofollow" style="font-weight: bold; color: #1CAAD9;">Sketchfab</a></p></div>
                 </div>
-            <p class="caption">Caption: Erklärung zum zweiten 3D-Modell, z.B. Darstellung nach Anwendung des ICP-Algorithmus.</p>
+            <p class="caption">Caption: The contour shows a phantom in the form of a female torso, recorded by the Brainlab ET Surface Tracking System. We can see two raw data sets for two different timestamps: Red (76551 3D points) is the initial surface, and blue (74883 3D points) shows the surface after a shift of 10mm in -y or caudal direction of the clinical coordinate system. Both point clouds were extracted from two single frames of the ETD Surface Device.</p>
         </div>
 
         <div class="figure-container">
-            <h2>Fig. 3: Lateral Movement of the Phantom</h2>
+            <h2>Fig. 3: Longitudinal Movement of the Lola Phantom</h2>
             <div class="media-wrapper">
                 <video autoplay loop muted playsinline controls>
                     <source src="images/phantom_shifting_lateral.mp4" type="video/mp4">
                     Dein Browser unterstützt das Video-Tag nicht.
                 </video>
             </div>
-            <p class="caption">Caption: Videoaufnahme des kontrollierten lateralen Shifts des Phantoms zur Validierung der Systemperformance.</p>
+            <p class="caption">Caption: Video rendering of the shift in the Lola phantom, after DBSCAN filtering.</p>
         </div>
 
         <div class="figure-container">
