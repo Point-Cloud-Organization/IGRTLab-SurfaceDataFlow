@@ -90,6 +90,15 @@
             font-size: 0.85rem;
             color: #adb5bd;
         }
+        .caption {
+            font-size: 0.9rem;
+            color: #555;
+            text-align: center;
+            margin-top: 15px;
+            font-style: normal;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -104,37 +113,44 @@
         <a href="https://github.com/Point-Cloud-Organization/IGRTLab-SurfaceDataFlow" class="btn-code">View Python Code on GitHub</a>
     </header>
 
-    <main class="main-content">
+   <main class="main-content">
 
         <div class="figure-container">
-            <h2>Fig. 1: Multimodal Surface & Thermal Point Cloud</h2>
+            <h2>Fig. 1: Titel für das erste 3D-Modell (z.B. Raw SGRT Point Cloud)</h2>
             <div class="media-wrapper">
-                <video autoplay loop muted playsinline>
-                    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-                    Browser unterstützt kein Video.
+                <div class="sketchfab-embed-wrapper"> <iframe title="Longitudinal 10mm shift in QA phantom for SGRT" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" width="100%" height="450" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share src="https://sketchfab.com/models/f65034940e0c4f31859218f1baa00387/embed"> </iframe> <p style="font-size: 13px; font-weight: normal; margin: 5px; color: #4A4A4A;"> <a href="https://sketchfab.com/3d-models/longitudinal-10mm-shift-in-qa-phantom-for-sgrt-f65034940e0c4f31859218f1baa00387?utm_medium=embed&utm_campaign=share-popup&utm_content=f65034940e0c4f31859218f1baa00387" target="_blank" rel="nofollow" style="font-weight: bold; color: #1CAAD9;"> Longitudinal 10mm shift in QA phantom for SGRT </a> by <a href="https://sketchfab.com/tim-buck?utm_medium=embed&utm_campaign=share-popup&utm_content=f65034940e0c4f31859218f1baa00387" target="_blank" rel="nofollow" style="font-weight: bold; color: #1CAAD9;"> tim-buck </a> on <a href="https://sketchfab.com?utm_medium=embed&utm_campaign=share-popup&utm_content=f65034940e0c4f31859218f1baa00387" target="_blank" rel="nofollow" style="font-weight: bold; color: #1CAAD9;">Sketchfab</a></p></div>
+                </div>
+            <p class="caption">Caption: Hier beschreibst du kurz, was der User in diesem interaktiven Modell betrachten kann.</p>
+        </div>
+
+        <div class="figure-container">
+            <h2>Fig. 2: Titel für das zweite 3D-Modell (z.B. Tracked Phantom Position)</h2>
+            <div class="media-wrapper">
+                <div class="sketchfab-embed-wrapper"> <iframe title="Recorded 10mm Shift of the Brainlab Lola Phantom" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" width="100%" height="450" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share src="https://sketchfab.com/models/92746ce16d1d48439423323c7125e107/embed"> </iframe> <p style="font-size: 13px; font-weight: normal; margin: 5px; color: #4A4A4A;"> <a href="https://sketchfab.com/3d-models/recorded-10mm-shift-of-the-brainlab-lola-phantom-92746ce16d1d48439423323c7125e107?utm_medium=embed&utm_campaign=share-popup&utm_content=92746ce16d1d48439423323c7125e107" target="_blank" rel="nofollow" style="font-weight: bold; color: #1CAAD9;"> Recorded 10mm Shift of the Brainlab Lola Phantom </a> by <a href="https://sketchfab.com/tim-buck?utm_medium=embed&utm_campaign=share-popup&utm_content=92746ce16d1d48439423323c7125e107" target="_blank" rel="nofollow" style="font-weight: bold; color: #1CAAD9;"> tim-buck </a> on <a href="https://sketchfab.com?utm_medium=embed&utm_campaign=share-popup&utm_content=92746ce16d1d48439423323c7125e107" target="_blank" rel="nofollow" style="font-weight: bold; color: #1CAAD9;">Sketchfab</a></p></div>
+                </div>
+            <p class="caption">Caption: Erklärung zum zweiten 3D-Modell, z.B. Darstellung nach Anwendung des ICP-Algorithmus.</p>
+        </div>
+
+        <div class="figure-container">
+            <h2>Fig. 3: Lateral Movement of the Phantom</h2>
+            <div class="media-wrapper">
+                <video autoplay loop muted playsinline controls>
+                    <source src="images/phantom_shifting_lateral.mp4" type="video/mp4">
+                    Dein Browser unterstützt das Video-Tag nicht.
                 </video>
             </div>
+            <p class="caption">Caption: Videoaufnahme des kontrollierten lateralen Shifts des Phantoms zur Validierung der Systemperformance.</p>
         </div>
 
         <div class="figure-container">
-            <h2>Fig. 2: Translational Tracking (ICP vs. Ground Truth)</h2>
+            <h2>Fig. 4: Rendered Point Cloud Track (Lateral View)</h2>
             <div class="media-wrapper">
-                <img src="https://via.placeholder.com/800x400/e9ecef/1a3a5a?text=Plot:+Translational+Tracking" alt="Translational Plot">
+                <video autoplay loop muted playsinline controls>
+                    <source src="images/surf_shift_latview.mp4" type="video/mp4">
+                    Dein Browser unterstützt das Video-Tag nicht.
+                </video>
             </div>
-        </div>
-
-        <div class="figure-container">
-            <h2>Fig. 3: Rotational Tracking (All Axes)</h2>
-            <div class="media-wrapper">
-                <img src="https://via.placeholder.com/800x400/e9ecef/1a3a5a?text=Plot:+Rotational+Tracking" alt="Rotational Plot">
-            </div>
-        </div>
-
-        <div class="figure-container">
-            <h2>Fig. 4: Registration Error (RMSE)</h2>
-            <div class="media-wrapper">
-                <img src="https://via.placeholder.com/800x400/e9ecef/1a3a5a?text=Plot:+RMSE+Error" alt="RMSE Plot">
-            </div>
+            <p class="caption">Caption: Visualisierung der getrackten Oberflächendaten über die Zeit, synchronisiert mit der Phantombewegung.</p>
         </div>
 
     </main>
