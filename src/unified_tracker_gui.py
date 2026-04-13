@@ -17,7 +17,11 @@ from scipy.spatial.transform import Rotation as R
 try:
     from extractH5.h5_loader import H5PointCloudStream
 except ImportError:
-    sys.path.append(str(Path(__file__).resolve().parent / "DummyDatenICP"))
+    # Navigiere aus 'src' heraus (parent.parent) und dann in 'data/DummyDatenICP'
+    project_root = Path(__file__).resolve().parent.parent
+    dummy_data_path = project_root / "data" / "DummyDatenICP"
+
+    sys.path.append(str(dummy_data_path))
     from extractH5.h5_loader import H5PointCloudStream
 
 
@@ -176,6 +180,10 @@ class PointCloudAnalyzerApp(tk.Tk):
         if self.vis is None:
             self.vis = o3d.visualization.Visualizer()
             self.vis.create_window(window_name="H5 Fast Viewer")
+            # --- NEU: Punktgröße hier einstellen ---
+            render_option = self.vis.get_render_option()
+            render_option.point_size = 1.0  # Kleinerer Wert = kleinere Punkte (Standard ist oft 5.0)
+            # ---------------------------------------
 
             # Punktwolke hinzufügen
             self.pcd_vis = o3d.geometry.PointCloud()

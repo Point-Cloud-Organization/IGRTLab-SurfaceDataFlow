@@ -10,7 +10,7 @@ output_dir = Path("/Users/timjb/Documents/MUI/Radioonko/Poster/PC_workflow")
 
 # --- 1. AESTHETICS & SETTINGS (Poster Style) ---
 plt.rcParams['font.family'] = 'sans-serif'
-plt.rcParams['font.sans-serif'] = ['Calibri']
+plt.rcParams['font.sans-serif'] = ['Arial', 'Helvetica', 'sans-serif']
 plt.rcParams['axes.titlesize'] = 14
 plt.rcParams['axes.labelsize'] = 12
 plt.rcParams['xtick.labelsize'] = 10
@@ -148,7 +148,7 @@ def plot_results(motor_data, icp_data):
     axs1[0].set_ylabel('Longitudinal [mm]', fontweight='bold')
     axs1[0].legend(loc='upper right')
     axs1[0].grid(True, linestyle=':', alpha=0.7)
-    axs1[0].set_title('Translational Tracking Results vs. Phantom Motor Postion', fontweight='bold')
+    axs1[0].set_title('Translational Tracking Results vs. Phantom Motor Position', fontweight='bold')
     axs1[1].plot(t_mot, x_mot, '--', color='red', label='Real Phantom Shift', zorder=1, linewidth=2)
     axs1[1].plot(t_icp, tx_icp, '-', color='#ff7f0e', label='Calculated Shift in x', zorder=2, alpha=0.8, linewidth=3)
     axs1[1].set_ylabel('Lateral [mm]', fontweight='bold')
