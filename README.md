@@ -7,14 +7,14 @@ Dieses Repository dokumentiert die technische Basisarbeit zur Extraktion und Val
 Der Fokus dieser Arbeit liegt auf der methodischen Aufarbeitung klinischer Datenströme. Durch die Entwicklung einer dedizierten Auswerte-Pipeline wird die volle Funktionalität moderner klinischer Monitoring-Systeme technisch nachgebildet und für weiterführende Analysen zugänglich gemacht.
 
 ### Kernfunktionalitäten
-* [cite_start]**HDF5-Datenextraktion**: Implementierung einer Lazy-Loading-Strategie (Klasse `H5PointCloudStream`) zum effizienten Auslesen von 3D-Datensätzen (540x720x3) direkt aus klinischen HDF5-Containern[cite: 1].
+* **HDF5-Datenextraktion**: Implementierung einer Lazy-Loading-Strategie (Klasse `H5PointCloudStream`) zum effizienten Auslesen von 3D-Datensätzen (540x720x3) direkt aus klinischen HDF5-Containern.
 * **3D-Visualisierung & Playback**: Synchronisierte Darstellung von Oberflächengeometrie und Thermaldaten über die Zeit unter Verwendung des Open-Source-Frameworks **Open3D**.
 * **DBSCAN-basierte Segmentierung**: Automatisierte Extraktion relevanter Strukturen (z. B. Phantome) aus den Rohdaten zur Reduktion von Messrauschen und Artefakten.
 * **Bewegungsanalyse (ICP-Tracking)**: Anwendung des *Iterative Closest Point* Algorithmus zur Verfolgung rigider Körper mit Sub-Millimeter-Präzision.
 
 ## Klinische Anwendung: Qualitätssicherung (QA)
 
-Die Pipeline ermöglicht eine detaillierte Validierung der Systemperformance im Rahmen der klinischen Qualitätssicherung. [cite_start]Durch den Vergleich der Tracking-Ergebnisse mit theoretischen Kinematik-Modellen (z. B. Motor-gesteuerte Phantombewegungen) können Metriken wie der RMSE3D und Score-Werte präzise bestimmt werden[cite: 1].
+Die Pipeline ermöglicht eine detaillierte Validierung der Systemperformance im Rahmen der klinischen Qualitätssicherung. Durch den Vergleich der Tracking-Ergebnisse mit theoretischen Kinematik-Modellen (z. B. Motor-gesteuerte Phantombewegungen) können Metriken wie der RMSE3D und Score-Werte präzise bestimmt werden.
 
 Dies demonstriert, dass die hier vorgestellten Open-Source-Methoden die volle Funktionalität klinischer Produkte abbilden und für unabhängige Validierungsprozesse genutzt werden können.
 
